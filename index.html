@@ -254,60 +254,59 @@
     © 2025 InstallerHub. Все права защищены.
   </footer>
 
-  <script>
-    const profileIcon = document.getElementById('profileIcon');
-    const profileMenu = document.getElementById('profileMenu');
-
-    profileIcon.addEventListener('click', () => {
-      profileMenu.classList.toggle('active');
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!profileIcon.contains(e.target) && !profileMenu.contains(e.target)) {
-        profileMenu.classList.remove('active');
-      }
-    });
-
-    // ======== Загрузка карточек из бэкенда ========
-    async function loadApps() {
-      const container = document.getElementById('appList');
-      container.innerHTML = '<p>Загрузка...</p>';
-
-      try {
-        const response = await fetch('https://corsproxy.io/?https://Cosmodesant.pythonanywhere.com/apps/');
-        if (!response.ok) throw new Error('Ошибка HTTP: ' + response.status);
-        const apps = await response.json();
-
-        container.innerHTML = ''; // очистить “Загрузка...”
-
-        apps.forEach(app => {
-          const card = document.createElement('div');
-          card.className = 'card';
-          card.innerHTML = `
-            <img src="${app.logo_url}" alt="${app.name}">
-            <h3>${app.name}</h3>
-            <p>${app.description}</p>
-            <a href="${app.download_url}" target="_blank" style="
-              display: inline-block;
-              margin-top: 10px;
-              background: linear-gradient(90deg, #6a0dad, #9b4dff);
-              color: white;
-              padding: 8px 16px;
-              border-radius: 8px;
-              text-decoration: none;
-              font-weight: 500;
-            ">Скачать</a>
-          `;
-          container.appendChild(card);
-        });
-
-      } catch (err) {
-        console.error('Ошибка загрузки:', err);
-        container.innerHTML = '<p>Ошибка при загрузке данных.</p>';
-      }
+<script>
+  const profileIcon = document.getElementById('profileIcon');
+  const profileMenu = document.getElementById('profileMenu');
+  profileIcon.addEventListener('click', () => profileMenu.classList.toggle('active'));
+  document.addEventListener('click', (e) => {
+    if (!profileIcon.contains(e.target) && !profileMenu.contains(e.target)) {
+      profileMenu.classList.remove('active');
     }
+  });
 
-    loadApps();
-  </script>
+  async function loadApps() {
+    const container = document.getElementById('appList');
+    container.innerHTML = '<p>Загрузка...</p>';
+
+    try {
+      const response = await fetch('https://corsproxy.io/?https://Cosmodesant.pythonanywhere.com/apps/');
+      if (!response.ok) throw new Error('Ошибка: ' + response.status);
+      const apps = await response.json();
+      container.innerHTML = '';
+
+      apps.forEach(app => {
+        // ──────── ГЛАВНОЕ: превращаем ЛЮБУЮ ссылку FileHippo в нужный формат ────────
+        let url = app.download_url.trim();
+
+        // 1. Находим часть после filehippo.com — это slug (например download_tera-term)
+        const match = url.match(/filehippo\.com\/([^/?#]+).*?/i);
+        const slug = match ? match[1] : 'download_unknown';
+
+        // 2. Формируем строго нужный вид ссылки
+        const directUrl = `https://filehippo.com/${slug}/post_download/`;
+        // ─────────────────────────────────────────────────────────────────────
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${app.logo_url}" alt="${app.name}">
+          <h3>${app.name}</h3>
+          <p>${app.description}</p>
+          <a href="${directUrl}" 
+             style="display:inline-block;margin-top:10px;background:linear-gradient(90deg,#6a0dad,#9b4dff);color:white;padding:8px 16px;border-radius:8px;text-decoration:none;font-weight:500;">
+            Скачать
+          </a>
+        `;
+        container.appendChild(card);
+      });
+    } catch (err) {
+      console.error(err);
+      container.innerHTML = '<p>Ошибка загрузки приложений.</p>';
+    }
+  }
+
+  loadApps();
+</script>
 </body>
 </html>
+
