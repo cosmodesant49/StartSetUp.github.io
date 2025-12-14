@@ -252,11 +252,13 @@ async function loadApps() {
     container.innerHTML = '<p>Загрузка...</p>';
 
     const token = localStorage.getItem('token');
-    let favoriteIds = [];
-if (token) {
-    collection = await fetchCollection(); // теперь collection содержит реальные объекты
-}
+    let collectionIds = [];
 
+    // Загружаем коллекцию пользователя, если есть токен
+    if (token) {
+        collection = await fetchCollection(); // collection содержит реальные объекты
+        collectionIds = collection.map(app => app.id); // массив ID уже добавленных
+    }
 
     try {
         const response = await fetch('https://corsproxy.io/?https://Cosmodesant.pythonanywhere.com/apps/');
@@ -274,12 +276,14 @@ if (token) {
             const card = document.createElement('div');
             card.className = 'card';
 
-            // Определяем, добавлено ли в избранное
-            const isFav = favoriteIds && favoriteIds.includes(app.id);
+            // Проверяем, добавлено ли приложение в коллекцию
+            const isFav = collectionIds.includes(app.id);
 
             let collectionBtn = '';
             if (token) {
-                collectionBtn = `<button class="collection ${isFav ? 'added' : ''}">${isFav ? 'Добавлено' : '+ В коллекцию'}</button>`;
+                collectionBtn = `<button class="collection ${isFav ? 'added' : ''}">
+                    ${isFav ? 'Добавлено' : '+ В коллекцию'}
+                </button>`;
             }
 
             card.innerHTML = `
@@ -295,7 +299,7 @@ if (token) {
                 </div>
             `;
 
-            // Обработчик кнопки "Добавить в коллекцию"
+            // Обработчик кнопки "Добавить в коллекцию", только если ещё не добавлено
             if (token && !isFav) {
                 const btn = card.querySelector('.collection');
                 btn.onclick = async () => {
@@ -311,8 +315,9 @@ if (token) {
                         if (res.ok) {
                             btn.textContent = 'Добавлено';
                             btn.classList.add('added');
-                            collection.push({...app, download_url: directUrl});
-                            renderCollection();
+                            collection.push({ ...app, download_url: directUrl });
+                            collectionIds.push(app.id); // обновляем массив ID
+                            renderCollection(); // обновляем коллекцию в модальном окне
                         } else {
                             const data = await res.json();
                             alert(JSON.stringify(data));
